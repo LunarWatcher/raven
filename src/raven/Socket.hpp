@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <optional>
+
 namespace raven {
 
 enum class SocketType {
@@ -15,7 +17,7 @@ struct SocketConfig {
     int queue = 128;
     SocketType type;
     uint16_t port;
-    std::string ip;
+    std::optional<std::string> ip;
 };
 
 class Socket {
@@ -26,8 +28,10 @@ public:
     virtual ~Socket() = default;
 
     virtual void bind() = 0;
+    virtual void close() = 0;
 
     virtual std::unique_ptr<Connection> accept() = 0;
+    virtual int getNativeHandle() = 0;
 };
 
 }

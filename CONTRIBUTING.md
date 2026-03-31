@@ -4,6 +4,10 @@ This file is mostly aimed at developers, and primarily describes the setup requi
 
 This file will not go into detail on how to write issues. Any important details that need to be included (if any) will be part of an issue template, selectable when you create an issue. If none exists for your use-case (or at all), use common sense. I do strongly suggest reading [the section on communicating effectively on opensource.guide](https://opensource.guide/how-to-contribute/#communicating-effectively) if you're wondering how to write good issues. There's nothing anyone could write here that isn't covered there and in thousands of other resources around the internet in far greater detail.
 
+## Issues and pull requests
+
+Issues and pull requests must be opened on [Codeberg](//codeberg.org/LunarWatcher/raven). GitHub is purely a mirror used for the CI.
+
 ## Basic guidelines
 
 ### Use of generative AI is banned
@@ -12,7 +16,12 @@ Generative AI uses training data [based on plagiarism and piracy](https://web.ar
 
 ## Development setup
 
-TBA
+```bash
+mkdir build
+cd build
+# Utility wrapper that clones cmake-conan, and then runs CMake with `-DCMAKE_PROJECT_TOP_LEVEL_INCLUDES`
+../scripts/cmake-conan.sh -DCMAKE_BUILD_TYPE=Debug
+```
 
 ### Running tests
 

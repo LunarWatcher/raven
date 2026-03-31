@@ -2,7 +2,6 @@
 
 #include "raven/Socket.hpp"
 #include "raven/conn/Connection.hpp"
-#include <cstdint>
 #include <memory>
 
 namespace raven::linuximpl {
@@ -13,7 +12,10 @@ public:
     LinuxSocket(SocketConfig&& conf);
     ~LinuxSocket();
     void bind() override;
+    void close() override;
     std::unique_ptr<Connection> accept() override;
+
+    int getNativeHandle() override { return fd; }
 };
 
 }

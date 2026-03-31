@@ -1,6 +1,8 @@
-add_executable(tests 
-    src/PseudoHttpTests.cpp
+add_executable(tests
+    src/http/HttpTests.cpp
 )
+
+find_package(cpr REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -11,8 +13,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-target_link_libraries(tests Catch2::Catch2WithMain)
-
-target_link_libraries(tests raven)
+target_link_libraries(tests
+    Catch2::Catch2WithMain
+    cpr::cpr
+    raven
+)
 
 # vim:ft=cmake

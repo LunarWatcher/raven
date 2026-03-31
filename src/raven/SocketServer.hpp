@@ -1,23 +1,48 @@
 #pragma once
 
+#include "raven/ConnectionPool.hpp"
 #include "raven/Socket.hpp"
 #include <memory>
 
 namespace raven {
 
+struct ServerConfig {
+    int threadConnectionLimit = 128;
+    size_t threads = std::min<size_t>(
+        1, std::thread::hardware_concurrency() / 2
+    );
+};
+
 class SocketServer {
 private:
-    std::unique_ptr<Socket> sock;
+    std::shared_ptr<Socket> sock;
+    ServerConfig conf;
+    PoolSync sync;
+
+    std::unique_ptr<ConnectionPool> pool;
 
 public:
     SocketServer(
-        SocketConfig&& conf
+        SocketConfig&& socketConf,
+        ServerConfig&& serverConf,
+        ConnPoolConfig&& poolConf
     );
+    ~SocketServer() = default;
 
     /**
-     * Starts an acceptor. This is a blocking function that can be called from multiple threads.
+     * Starts the threadpool. This is a non-blocking function  
      */
-    void startAcceptor();
+    void start();
+
+    void waitForDone();
+
+    /**
+     * Closes the server. Normally, you won't need to call this manually. If you have threads joining before the
+     * SocketServer is destroyed that you would like to actually join, then you need to call this function.
+     *
+     * Not calling this function results in it being automagically called in the destructor.
+     */
+    void close();
 
 };
 

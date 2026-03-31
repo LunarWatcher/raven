@@ -1,4 +1,15 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.27)
+
+if (ENABLE_CONAN)
+    include(FetchContent)
+    FetchContent_Declare(conan
+        GIT_REPOSITORY https://github.com/conan-io/cmake-conan
+        GIT_TAG develop2
+    )
+    FetchContent_MakeAvailable(conan)
+    set(CMAKE_PROJECT_TOP_LEVEL_INCLUDES ${conan_SOURCE_DIR}/conan_provider.cmake)
+endif()
+
 project(raven)
 
 set (CMAKE_CXX_STANDARD 23)
@@ -18,12 +29,14 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
     option(RAVEN_ENABLE_DEMOS "Whether or not to build demos" ON)
     option(RAVEN_BUILD_TESTS "Whether or not to build tests" ON)
+    option(RAVEN_DEBUG_LOGGING "Whether or not to enable debug logging. This should never be turned on unless the goal is debugging Raven" ON)
 else()
     message (STATUS "raven: Running as a submodule")
     set(RAVEN_STANDALONE OFF)
 
     option(RAVEN_ENABLE_DEMOS "Whether or not to build demos" OFF)
     option(RAVEN_BUILD_TESTS "Whether or not to build tests" OFF)
+    option(RAVEN_DEBUG_LOGGING "Whether or not to enable debug logging. This should never be turned on unless the goal is debugging Raven" OFF)
 endif()
 
 # Unused, but reserved for future use
@@ -35,11 +48,12 @@ message(STATUS "\t- Demos: ${RAVEN_ENABLE_DEMOS}")
 message(STATUS "\t- Tests: ${RAVEN_BUILD_TESTS}")
 message(STATUS "\t- Docs: ${RAVEN_DOCS}")
 message(STATUS "\t- Sanitising: ${RAVEN_SANITISE}")
+message(STATUS "\t- Debug logging: ${RAVEN_DEBUG_LOGGING}")
 
 add_subdirectory(src)
 
 if (RAVEN_BUILD_TESTS)
-    add_subdirectory(tests)
+    add_subdirectory(tests EXCLUDE_FROM_ALL)
 
     add_custom_target(test
         COMMAND tests

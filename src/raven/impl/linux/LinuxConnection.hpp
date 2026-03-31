@@ -4,35 +4,48 @@
 #include "raven/ip/IP.hpp"
 #include <netinet/in.h>
 #include <unistd.h>
+#include <array>
 
 namespace raven::linuximpl {
 
 class LinuxConnection : public Connection {
 private:
     int fd;
-    ip::IP ip;
+
+    size_t read(
+        std::array<char, Connection::WindowSize>& buff,
+        int& flags
+    ) override;
+    size_t write(
+        std::array<char, WindowSize>& buff,
+        size_t length,
+        int& flags
+    ) override;
+
 public:
     LinuxConnection(
         const sockaddr_in& clientAddr,
         int fd
     );
-    ~LinuxConnection();
     LinuxConnection(LinuxConnection&) = delete;
     LinuxConnection(LinuxConnection&& other) noexcept
-        : fd(other.fd),
-        ip(std::move(other.ip))
+        : Connection(std::move(other.ip)), fd(other.fd)
     {
         other.fd = -1;
     }
+
+    ~LinuxConnection();
 
     void close() override {
         if (fd >= 0) {
             ::close(fd);
             fd = -1;
+            open = false;
+            closed = true;
         }
     }
 
-    void write(const std::string& buff) override;
+    int getNativeHandle() override { return fd; }
 };
 
 }
