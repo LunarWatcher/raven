@@ -1,0 +1,33 @@
+This org doc is approximately a roadmap to v1, with a backlog that'll be converted to codeberg issues eventually:tm:.
+* V1 roadmap [1/4]
+  Note that the roadmap isn't fully ordered by priority or execution order. It'll be reordered as the exact steps become more obvious.
+** DONE Scaffold [1/1]
+   This task describes the core setup required for bare minimum functionality that'll be deployed out to 
+*** DONE Epoll rewrite
+    epoll should allow for much more efficient use of threads than some of the alternatives. It also appears to be the best option for dealing with long async reads and writes.
+**** DONE Thread pools by default
+     The current system does not directly embed threads as part of raven's control system. With epoll, it has to.
+
+     As a tangent, the epoll changes do still open for IO threads and processing threads as separate concepts, but the processing threads would be a feature of the library built on top rather than of the socket library. This may require additional synchronisation on the connection objects to not fail miserably.
+** TODO Stability checking and features
+*** TODO Stability check the server
+    Magpie failed weirdly under load and triggered multiple asio-related memory leaks. This needs to be properly checked. This can also be checked as part of the magpie migration
+*** TODO Check the library against a full server implementation (magpie)
+*** TODO Follow up on the comments on =EPOLLIN | EPOLLET=
+    This is probably the biggest obstacle for the viability of the system as a full production system
+** TODO SSL support
+   This is somewhat blocking for the magpie implementation, since it needs SSL for browser support to be possible. HTTP/2 is the gift that keeps on giving in that regard
+
+   I don't /think/ SSL support should be that bad, but I don't know. It seems fairly straight-forward, though I am worried about how it'll fit into the current system. I think it can be decoded directly from the input bytes without some form of window, but I'm not sure. If the bytes need to be persisted, that's a problem:tm:.
+** TODO Performance extensions [0/2]
+*** TODO Figure out how epoll works with closing sockets, i.e. how to maintain =Connection::close()= without `epoll` fucking itself
+*** TODO Allow threads to be reserved for write use
+    This should avoid problems with cases where big reads or writes on certain threads prevents writes. Reads will be heavily tied to processing threads, but writes can be completely done processing, and just pending a write.
+
+    If the writes are sufficiently big, this could be an issue, because it can't realistically be done in idle time. Biasing threads towards writing first and then processing other things could solve this as well, but I'm not sure how big the problem even will be.
+* Backlog [0/2]
+** TODO Windows support
+   Windows support is going to be a whole thing:tm:
+   As far as I can tell, there's no direct equivalent to =epoll=, so I'm not sure how it would implement it.
+   There _is_ a windows port of epoll that might give some clues about which API functions to look at, but I fear it'll be so different it'll require altering the architecture. We'll see though
+** TODO Do coroutines makes sense?
