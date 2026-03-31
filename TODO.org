@@ -2,7 +2,7 @@ This org doc is approximately a roadmap to v1, with a backlog that'll be convert
 * V1 roadmap [1/4]
   Note that the roadmap isn't fully ordered by priority or execution order. It'll be reordered as the exact steps become more obvious.
 ** DONE Scaffold [1/1]
-   This task describes the core setup required for bare minimum functionality that'll be deployed out to 
+   This task describes the core setup required for bare minimum functionality that'll be deployed 
 *** DONE Epoll rewrite
     epoll should allow for much more efficient use of threads than some of the alternatives. It also appears to be the best option for dealing with long async reads and writes.
 **** DONE Thread pools by default
