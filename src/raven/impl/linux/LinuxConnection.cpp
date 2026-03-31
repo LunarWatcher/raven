@@ -26,8 +26,8 @@ LinuxConnection::LinuxConnection(
         std::string(inet_ntoa((const in_addr&) clientAddr.sin_addr))
     }), fd(fd) {
 
-    if (fcntl(fd, O_NONBLOCK) < 0) {
-        RavenLog("Failed to set nonblocking: %s", strerror(errno));
+    if (fcntl(fd, F_SETFL,  O_NONBLOCK) < 0) {
+        RavenLog("Failed to set nonblocking: %s\n", strerror(errno));
     }
 }
 

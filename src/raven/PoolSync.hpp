@@ -1,5 +1,4 @@
 #include <mutex>
-#include <semaphore>
 #include <atomic>
 #include <condition_variable>
 
@@ -14,7 +13,7 @@ struct PoolSync {
     std::condition_variable sync;
     std::condition_variable closed;
 
-    std::counting_semaphore<128> pools;
+    std::atomic<size_t> pools;
     std::atomic<bool> isRunning{true};
 
     PoolSync() : pools {0} {}
@@ -28,11 +27,13 @@ struct PoolSync {
             return;
         }
         isRunning.store(false);
-        if (pools.max() != 0) {
+        if (pools != 0) {
             std::unique_lock l(m);
             sync.wait(
                 l,
-                [&]() { return pools.max() == 0; }
+                [&]() {
+                    return pools == 0;
+                }
             );
         }
         closed.notify_all();
@@ -47,11 +48,14 @@ struct PoolSync {
     }
 
     void newConnPool() {
-        pools.release();
+        pools += 1;
     }
 
     void destroyConnPool() {
-        pools.acquire();
+        if (pools == 0) {
+            throw std::runtime_error("There are no pools to destroy");
+        }
+        pools -= 1;
         sync.notify_all();
     }
 };

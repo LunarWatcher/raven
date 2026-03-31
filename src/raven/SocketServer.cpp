@@ -27,6 +27,10 @@ SocketServer::SocketServer(
     sock->bind();
 }
 
+SocketServer::~SocketServer() {
+    sync.close();
+}
+
 void SocketServer::start() {
     if (!pool->started()) {
         pool->start(this->conf.threads);

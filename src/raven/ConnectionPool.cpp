@@ -1,4 +1,5 @@
 #include "ConnectionPool.hpp"
+#include "raven/Logging.hpp"
 
 namespace raven {
 
@@ -7,8 +8,6 @@ ConnectionPool::ConnectionPool(
     PoolSync& syncObject,
     const std::shared_ptr<Socket>& socket
 ): callbacks(config), sync(syncObject), socket(socket) {
-    sync.newConnPool();
-
     if (callbacks.onRecv == nullptr) {
         throw std::runtime_error("onRecvReady cannot be nullptr");
     }
@@ -30,12 +29,14 @@ void ConnectionPool::start(size_t threadCount) {
     for (size_t i = 0; i < threadCount; ++i) {
         threads.push_back(
             std::thread(
-                [this]() {
+                [this, i]() {
                     // TODO: this should be RAII'd
+                    RavenLog("Thread %ld online\n", i);
                     this->sync.newConnPool();
                     while (this->sync.isRunning) {
                         poll();
                     }
+                    RavenLog("Thread %ld dying\n", i);
                     this->sync.destroyConnPool();
                 }
             )

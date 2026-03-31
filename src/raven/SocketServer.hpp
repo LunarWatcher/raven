@@ -8,6 +8,7 @@ namespace raven {
 
 struct ServerConfig {
     int threadConnectionLimit = 128;
+    // TODO: this should be max, but min is pretty convenient for some initial debugging, so fix later
     size_t threads = std::min<size_t>(
         1, std::thread::hardware_concurrency() / 2
     );
@@ -27,7 +28,7 @@ public:
         ServerConfig&& serverConf,
         ConnPoolConfig&& poolConf
     );
-    ~SocketServer() = default;
+    ~SocketServer();
 
     /**
      * Starts the threadpool. This is a non-blocking function  

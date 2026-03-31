@@ -74,11 +74,10 @@ void LinuxConnectionPool::poll() {
                     std::ignore = conn.release();
                 }
             } else {
-                RavenLog("Entered\n");
                 auto* conn = (Connection*) ev.data.ptr;
 
                 if (ev.events & EPOLLHUP || ev.events & EPOLLERR) {
-                    RavenLog("EPOLLHUP signaled\n"); 
+                    RavenLog("EPOLLHUP signaled\n");
                     conn->close();
                 } else {
                     if (ev.events & EPOLLIN) {
