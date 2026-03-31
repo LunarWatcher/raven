@@ -28,7 +28,8 @@ SocketServer::SocketServer(
 }
 
 SocketServer::~SocketServer() {
-    sync.close();
+    sync.close(false);
+    pool->close();
 }
 
 void SocketServer::start() {

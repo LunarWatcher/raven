@@ -21,22 +21,27 @@ struct PoolSync {
     ~PoolSync() {
         close();
     }
-    void close() {
-        if (!isRunning.load()) {
-            // Already closed
-            return;
-        }
+
+    /**
+     * Sets running to false and optionally waits for the threads to join
+     *
+     * \param wait      Whether or not to wait for termination. Set to false to pre-signal termination of the PoolSync
+     *                  instance. 
+     */
+    void close(bool wait = true) {
         isRunning.store(false);
-        if (pools != 0) {
-            std::unique_lock l(m);
-            sync.wait(
-                l,
-                [&]() {
-                    return pools == 0;
-                }
-            );
+        if (wait) {
+            if (pools != 0) {
+                std::unique_lock l(m);
+                sync.wait(
+                    l,
+                    [&]() {
+                        return pools == 0;
+                    }
+                );
+            }
+            closed.notify_all();
         }
-        closed.notify_all();
     }
 
     void subscribeToTermination() {

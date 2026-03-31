@@ -7,6 +7,7 @@ namespace raven::linuximpl {
 class LinuxConnectionPool : public ConnectionPool {
 protected:
     int epollFd = -1;
+    int eventFd = -1;
 
     void poll() override;
 public:
@@ -17,6 +18,7 @@ public:
     );
     ~LinuxConnectionPool();
 
+    void close() override;
     void start(size_t threadCount) override;
 };
 

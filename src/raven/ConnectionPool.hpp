@@ -90,6 +90,7 @@ public:
     virtual void start(
         size_t threadCount
     );
+    virtual void close() {}
 
     bool started() { return threads.size() > 0; }
 };
