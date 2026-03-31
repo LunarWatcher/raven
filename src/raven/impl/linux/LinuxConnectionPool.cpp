@@ -48,6 +48,12 @@ void LinuxConnectionPool::start(size_t threadCount) {
 
 LinuxConnectionPool::~LinuxConnectionPool() {
     close();
+
+    // TODO: this triggers a memory leak in tests if a connection is left alive at shutdown time, since the raw pointers
+    // are left.
+    // I don't think I care? The bulk of the solution for tests is just ensuring the connections are not kept alive past
+    // the test boundary, so the termination is on the client side. And if it's termination at runtime in production,
+    // there are bigger things to worry about (the memory is freed moments after in a proper shutdown anyway)
     if (epollFd >= 0) {
         ::close(epollFd);
         epollFd = -1;
@@ -60,7 +66,7 @@ LinuxConnectionPool::~LinuxConnectionPool() {
 void LinuxConnectionPool::close() {
     uint64_t val = 1; // Note to self; this needs to be the same size as the eventfd
     write(eventFd, &val, sizeof(val));
-    RavenLog("Wrote to eventfd %d\n", eventFd);
+    RavenLog("SHUTDOWN: Wrote to eventfd %d\n", eventFd);
 }
 
 void LinuxConnectionPool::poll() {
@@ -76,7 +82,7 @@ void LinuxConnectionPool::poll() {
         for (size_t i = 0; i < (size_t) eventCount; ++i) {
             auto& ev = ready.at(i);
             if (ev.data.fd == this->eventFd) {
-                RavenLog("Received interrupt event\n");
+                RavenLog("SHUTDOWN: Received interrupt event\n");
             } else if (ev.data.ptr == socket.get()) { // This is gross, but if it works
                 auto conn = socket->accept();
 

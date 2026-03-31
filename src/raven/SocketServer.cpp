@@ -28,8 +28,7 @@ SocketServer::SocketServer(
 }
 
 SocketServer::~SocketServer() {
-    sync.close(false);
-    pool->close();
+    close();
 }
 
 void SocketServer::start() {
@@ -43,8 +42,14 @@ void SocketServer::waitForDone() {
 }
 
 void SocketServer::close() {
+    // TODO: the sync closure here has got somewhat out of hand. There's too many moving parts, but sync has to be both
+    // created first and shut down first, so I doubt there's a better way to do it. The close methods should be made
+    // more consistent though, a fair few of them could look like outwards API methods while they're functionally just
+    // internal destructor logic.
+    sync.close(false);
+    pool->close();
+    sync.close(true);
     sock->close();
-    sync.close();
 }
 
 }
