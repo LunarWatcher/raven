@@ -2,6 +2,7 @@
 #include <sys/eventfd.h>
 #include <cstring>
 #include <sys/epoll.h>
+#include <unistd.h>
 #include <raven/Logging.hpp>
 
 namespace raven::linuximpl {
