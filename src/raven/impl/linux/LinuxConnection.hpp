@@ -40,7 +40,6 @@ public:
     void close() override {
         if (fd >= 0) {
             ::close(fd);
-            RavenLog("Flushed\n");
             fd = -1;
             open = false;
             closed = true;

@@ -56,14 +56,18 @@ struct PoolSync {
     }
 
     void newConnPool() {
-        RavenLog("Registered %li pools\n", ++pools);
+        [[maybe_unused]]
+        auto pools = ++this->pools;
+        RavenLog("Registered %li pools\n", pools);
     }
 
     void destroyConnPool() {
         if (pools == 0) {
             throw std::runtime_error("There are no pools to destroy");
         }
-        RavenLog("Deregistered: %li pools remain\n", --pools);
+        [[maybe_unused]]
+        auto pools = --this->pools;
+        RavenLog("Deregistered: %li pools remain\n", pools);
         sync.notify_all();
     }
 };

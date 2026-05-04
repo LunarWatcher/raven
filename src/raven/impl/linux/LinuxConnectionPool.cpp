@@ -88,7 +88,7 @@ void LinuxConnectionPool::close() {
 }
 
 void LinuxConnectionPool::poll() {
-    std::array<epoll_event, 1> ready;
+    thread_local std::array<epoll_event, 1> ready;
     auto eventCount = epoll_wait(
         this->epollFd,
         ready.data(),
@@ -110,27 +110,20 @@ void LinuxConnectionPool::poll() {
                 propagateShutdown();
                 break;
             } else if (ev.data.ptr == socket.get()) { // This is gross, but if it works
-                RavenLog("ev.events=%i\n", ev.events);
                 if ((ev.events & EPOLLHUP) > 0) {
-                    RavenLog("Events contains EPOLLHUP\n");
+                    RavenLog("Events for socket contains EPOLLHUP\n");
                     break;
                 }
                 auto conn = socket->accept();
 
                 if (!conn) {
+                    RavenLog("Accept aborted: no pending sockets\n");
                     continue;
                 }
 
                 RavenLog("Accepting fd=%d\n", conn->getNativeHandle());
                 epoll_event ev;
-                // TODO: since this is a combined EPOLLIN | EPOLLOUT with EPOLLET, how will this work with situations
-                // where an EPOLLOUT becomes available, but the application doesn't have anything to write?
-                // If the event persists once an EPOLLIN is triggered, this will self-recover, but it's not great.
-                // EPOLLEXCLUSIVE means the epoll-socket pair cannot be edited, so it's not just a matter of turning it
-                // off with EPOLL_CTL_MOD.
-                // Maybe we need to persist EPOLLOUT on the connection? I don't think it'll un-ready itself
-                // I suspect the main problem scenario here is websockets, which is mostly out of scope
-                ev.events = EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLET | EPOLLEXCLUSIVE;
+                ev.events = EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLONESHOT;
                 ev.data.ptr = conn.get();
                 if (epoll_ctl(
                     epollFd,
@@ -214,15 +207,16 @@ void LinuxConnectionPool::poll() {
                 // } else {
                 //     ev.events = EPOLLIN | EPOLLHUP | EPOLLET | EPOLLONESHOT;
                 // }
-                // if (epoll_ctl(
-                //     epollFd,
-                //     EPOLL_CTL_MOD,
-                //     conn->getNativeHandle(),
-                //     &ev
-                // ) < 0) {
-                //     RavenLog("Failed to queue for next read and/or write: %s\n", strerror(errno));
-                //     delete conn;
-                // }
+                ev.events = EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLONESHOT;
+                if (epoll_ctl(
+                    epollFd,
+                    EPOLL_CTL_MOD,
+                    conn->getNativeHandle(),
+                    &ev
+                ) < 0) {
+                    RavenLog("Failed to queue for next read and/or write: %s\n", strerror(errno));
+                    delete conn;
+                }
             }
         }
     }
