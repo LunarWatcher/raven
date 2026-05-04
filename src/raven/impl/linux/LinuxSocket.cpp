@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <cstring>
+#include <fcntl.h>
 #include <memory>
 #include <stdexcept>
 #include <sys/socket.h>
@@ -33,6 +34,10 @@ void LinuxSocket::bind() {
         PF_INET,
         conf.type == SocketType::Stream ? SOCK_STREAM : SOCK_DGRAM,
         0
+    );
+    fcntl(
+        fd,
+        F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK
     );
 
     if (fd < 0) {
@@ -83,17 +88,14 @@ std::unique_ptr<Connection> LinuxSocket::accept() {
     sockaddr_in clientAddr;
     socklen_t clientAddrSize = sizeof(clientAddr);
     int clientFd;
-    while (true) {
-        clientFd = ::accept(
-            this->fd, (sockaddr*) &clientAddr,
-            &clientAddrSize
-        );
 
-        if (clientFd < 0) {
-            // TODO: log error?
-            continue;
-        }
-        break;
+    clientFd = ::accept(
+        this->fd, (sockaddr*) &clientAddr,
+        &clientAddrSize
+    );
+
+    if (clientFd < 0) {
+        return nullptr;
     }
 
     return std::make_unique<LinuxConnection>(

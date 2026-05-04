@@ -1,5 +1,6 @@
 #pragma once
 
+#include "raven/Logging.hpp"
 #include "raven/conn/Connection.hpp"
 #include "raven/ip/IP.hpp"
 #include <netinet/in.h>
@@ -39,6 +40,7 @@ public:
     void close() override {
         if (fd >= 0) {
             ::close(fd);
+            RavenLog("Flushed\n");
             fd = -1;
             open = false;
             closed = true;

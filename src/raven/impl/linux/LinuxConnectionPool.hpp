@@ -10,6 +10,7 @@ protected:
     int eventFd = -1;
 
     void poll() override;
+    void propagateShutdown();
 public:
     LinuxConnectionPool(
         const ConnPoolConfig& config,

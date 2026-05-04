@@ -46,10 +46,13 @@ void SocketServer::close() {
     // created first and shut down first, so I doubt there's a better way to do it. The close methods should be made
     // more consistent though, a fair few of them could look like outwards API methods while they're functionally just
     // internal destructor logic.
+    sock->close();
+    RavenLog("Socket closed\n");
     sync.close(false);
     pool->close();
+    RavenLog("Connection pool shutdown requested\n");
     sync.close(true);
-    sock->close();
+    RavenLog("Connection pool shutdown completed\n");
 }
 
 }

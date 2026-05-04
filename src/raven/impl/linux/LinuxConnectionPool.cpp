@@ -1,4 +1,5 @@
 #include "LinuxConnectionPool.hpp"
+#include <iostream>
 #include <sys/eventfd.h>
 #include <cstring>
 #include <sys/epoll.h>
@@ -18,6 +19,11 @@ LinuxConnectionPool::LinuxConnectionPool(
     }
 }
 
+void LinuxConnectionPool::propagateShutdown() {
+    uint64_t val = 1; // Note to self; this needs to be the same size as the eventfd
+    eventfd_write(eventFd, val);
+}
+
 void LinuxConnectionPool::start(size_t threadCount) {
     epoll_event ev;
     ev.events = EPOLLIN | EPOLLEXCLUSIVE;
@@ -32,6 +38,15 @@ void LinuxConnectionPool::start(size_t threadCount) {
     }
 
     eventFd = eventfd(0, EFD_NONBLOCK);
+    if (eventFd < 0) {
+        RavenLog(
+            "Error: %s (fd=%d)\n",
+            strerror(errno),
+            socket->getNativeHandle()
+        );
+        throw std::runtime_error("Failed to initialize eventfd" + std::string(strerror(errno)));
+    }
+    ev = {};
     ev.events = EPOLLIN;
     ev.data.fd = eventFd;
 
@@ -49,29 +64,31 @@ void LinuxConnectionPool::start(size_t threadCount) {
 
 LinuxConnectionPool::~LinuxConnectionPool() {
     close();
-
-    // TODO: this triggers a memory leak in tests if a connection is left alive at shutdown time, since the raw pointers
-    // are left.
-    // I don't think I care? The bulk of the solution for tests is just ensuring the connections are not kept alive past
-    // the test boundary, so the termination is on the client side. And if it's termination at runtime in production,
-    // there are bigger things to worry about (the memory is freed moments after in a proper shutdown anyway)
-    if (epollFd >= 0) {
-        ::close(epollFd);
-        epollFd = -1;
-    }
-    if (eventFd >= 0) {
-        ::close(eventFd);
-    }
 }
 
 void LinuxConnectionPool::close() {
-    uint64_t val = 1; // Note to self; this needs to be the same size as the eventfd
-    write(eventFd, &val, sizeof(val));
-    RavenLog("SHUTDOWN: Wrote to eventfd %d\n", eventFd);
+    if (epollFd >= 0) {
+        ::close(epollFd);
+    }
+
+
+    propagateShutdown();
+    for (auto& thread : threads) {
+        if (thread.joinable()) {
+            thread.join();
+            propagateShutdown();
+        }
+    }
+
+    if (eventFd >= 0) {
+        ::close(eventFd);
+    }
+    epollFd = -1;
+    eventFd = -1;
 }
 
 void LinuxConnectionPool::poll() {
-    std::array<epoll_event, 10> ready;
+    std::array<epoll_event, 1> ready;
     auto eventCount = epoll_wait(
         this->epollFd,
         ready.data(),
@@ -82,12 +99,29 @@ void LinuxConnectionPool::poll() {
     if (eventCount > 0) {
         for (size_t i = 0; i < (size_t) eventCount; ++i) {
             auto& ev = ready.at(i);
+            if (ev.events == 0) {
+                RavenLog("Warning: received ev.events == 0\n");
+                continue;
+            }
             if (ev.data.fd == this->eventFd) {
                 RavenLog("SHUTDOWN: Received interrupt event\n");
+                uint64_t ignored;
+                eventfd_read(ev.data.fd, &ignored);
+                propagateShutdown();
+                break;
             } else if (ev.data.ptr == socket.get()) { // This is gross, but if it works
+                RavenLog("ev.events=%i\n", ev.events);
+                if ((ev.events & EPOLLHUP) > 0) {
+                    RavenLog("Events contains EPOLLHUP\n");
+                    break;
+                }
                 auto conn = socket->accept();
 
-                RavenLog("Queueing fd=%d\n", conn->getNativeHandle());
+                if (!conn) {
+                    continue;
+                }
+
+                RavenLog("Accepting fd=%d\n", conn->getNativeHandle());
                 epoll_event ev;
                 // TODO: since this is a combined EPOLLIN | EPOLLOUT with EPOLLET, how will this work with situations
                 // where an EPOLLOUT becomes available, but the application doesn't have anything to write?
@@ -104,7 +138,7 @@ void LinuxConnectionPool::poll() {
                     conn->getNativeHandle(),
                     &ev
                 ) < 0) {
-                    RavenLog("Error: epollctl failed: %d", errno);
+                    RavenLog("Error: epollctl failed: %d\n", errno);
                 } else {
                     // The connection is copied to epoll_ctl. If epoll_ctl fails, this won't run, and the pointer will
                     // be freed as part of the unique_ptr's logic.

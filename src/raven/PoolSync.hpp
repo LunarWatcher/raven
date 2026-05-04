@@ -1,3 +1,5 @@
+#include "raven/Logging.hpp"
+#include <iostream>
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
@@ -36,6 +38,7 @@ struct PoolSync {
                 sync.wait(
                     l,
                     [&]() {
+                        std::cout << "pools = " << pools << std::endl;
                         return pools == 0;
                     }
                 );
@@ -53,14 +56,14 @@ struct PoolSync {
     }
 
     void newConnPool() {
-        pools += 1;
+        RavenLog("Registered %li pools\n", ++pools);
     }
 
     void destroyConnPool() {
         if (pools == 0) {
             throw std::runtime_error("There are no pools to destroy");
         }
-        pools -= 1;
+        RavenLog("Deregistered: %li pools remain\n", --pools);
         sync.notify_all();
     }
 };
