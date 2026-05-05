@@ -3,6 +3,9 @@ add_library(raven
     raven/ConnectionPool.cpp
 
     raven/conn/Connection.cpp
+
+    raven/config/SSLConfig.cpp
+    raven/ssl/OpenSSLImplHelper.cpp
 )
 
 if (WIN32)
@@ -18,5 +21,7 @@ if(RAVEN_DEBUG_LOGGING)
     target_compile_definitions(raven PUBLIC -DDEBUG_LOGGING=true)
 endif()
 
+find_package(OpenSSL REQUIRED)
+target_link_libraries(raven PUBLIC openssl::openssl)
 target_include_directories(raven PUBLIC ./)
 # vim:ft=cmake

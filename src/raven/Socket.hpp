@@ -1,5 +1,6 @@
 #pragma once
 
+#include "raven/config/SSLConfig.hpp"
 #include "raven/conn/Connection.hpp"
 #include <cstdint>
 #include <memory>
@@ -18,6 +19,7 @@ struct SocketConfig {
     SocketType type;
     uint16_t port;
     std::optional<std::string> ip;
+    std::optional<SSLConfig> sslConfig = std::nullopt;
 };
 
 class Socket {

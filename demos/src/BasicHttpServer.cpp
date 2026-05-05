@@ -1,6 +1,7 @@
 #include "raven/ConnectionPool.hpp"
 #include "raven/Socket.hpp"
 #include "raven/SocketServer.hpp"
+#include "raven/config/SSLConfig.hpp"
 #include <iostream>
 
 int main() {
@@ -12,6 +13,12 @@ int main() {
             .type = raven::SocketType::Stream,
             .port = 62169,
             .ip = "127.0.0.1",
+            .sslConfig = raven::SSLConfig(
+                "certs/demos/cert.pem",
+                "certs/demos/key.pem",
+                // This creates insecure certificates for test use. NEVER set this to true outside local and test use!
+                true
+            )
         },
         raven::ServerConfig {},
         raven::ConnPoolConfig {

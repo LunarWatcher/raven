@@ -1,17 +1,20 @@
 #include "LinuxConnection.hpp"
 #include "raven/Logging.hpp"
+#include "raven/ssl/OpenSSLImplHelper.hpp"
 
 #include <arpa/inet.h>
 #include <array>
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
+#include <openssl/ssl.h>
 
 namespace raven::linuximpl {
 
 LinuxConnection::LinuxConnection(
     const sockaddr_in& clientAddr,
-    int fd
+    int fd,
+    SSL* ssl
 ) : Connection({
         ip::IPVersion::IPv4,
         // Not sure if this is actually universally thread-safe.
@@ -24,9 +27,9 @@ LinuxConnection::LinuxConnection(
         // (Windows gets its own implementation, and everything else is obscure enough that it'll only start to matter in
         // the _very_ unlikely scenario this library actually gets widely used)
         std::string(inet_ntoa((const in_addr&) clientAddr.sin_addr))
-    }), fd(fd) {
+    }), fd(fd), ssl(ssl) {
 
-    if (fcntl(fd, F_SETFL,  O_NONBLOCK) < 0) {
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
         RavenLog("Failed to set nonblocking: %s\n", strerror(errno));
     }
 }
@@ -35,17 +38,30 @@ LinuxConnection::~LinuxConnection() {
     close();
 }
 
+void LinuxConnection::close() {
+    if (ssl != nullptr) {
+        SSL_shutdown(ssl);
+        SSL_free(ssl);
+        ssl = nullptr;
+    }
+    if (fd >= 0) {
+        ::close(fd);
+        fd = -1;
+        open = false;
+        closed = true;
+    }
+}
+
 size_t LinuxConnection::read(
     Buffer& buff,
     int& flags
 ) {
     // TODO: I want to mix in poll() here, but I suspect that'll be one level up from the connection
     // Maybe the acceptor also needs to have platform-specific implementations to allow this?
-    ssize_t read = ::recv(
+    ssize_t read = ossl::read(
+        ssl,
         this->fd,
-        buff.data(),
-        buff.size(),
-        0
+        buff
     );
 
     if (read < 0) {
@@ -78,9 +94,10 @@ size_t LinuxConnection::write(
     size_t available,
     int& flags
 ) {
-    ssize_t written = ::write(
+    ssize_t written = ossl::write(
+        ssl,
         this->fd,
-        buff.data(),
+        buff,
         available
     );
 

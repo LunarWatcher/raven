@@ -4,8 +4,10 @@
 #include "raven/Socket.hpp"
 #include "raven/conn/CommonDefs.hpp"
 #include "raven/conn/Connection.hpp"
+
 #include <functional>
 #include <list>
+
 namespace raven {
 
 struct ConnPoolConfig {

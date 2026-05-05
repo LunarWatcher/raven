@@ -5,6 +5,7 @@
 #include "raven/conn/Connection.hpp"
 #include "raven/ip/IP.hpp"
 #include <netinet/in.h>
+#include <openssl/crypto.h>
 #include <unistd.h>
 #include <array>
 
@@ -13,6 +14,7 @@ namespace raven::linuximpl {
 class LinuxConnection : public Connection {
 private:
     int fd;
+    SSL* ssl;
 
     size_t read(
         Buffer& buff,
@@ -27,25 +29,22 @@ private:
 public:
     LinuxConnection(
         const sockaddr_in& clientAddr,
-        int fd
+        int fd,
+        SSL* ssl
     );
     LinuxConnection(LinuxConnection&) = delete;
     LinuxConnection(LinuxConnection&& other) noexcept
-        : Connection(std::move(other.ip)), fd(other.fd)
+        : Connection(std::move(other.ip)),
+          fd(other.fd),
+          ssl(other.ssl)
     {
         other.fd = -1;
+        other.ssl = nullptr;
     }
 
     ~LinuxConnection();
 
-    void close() override {
-        if (fd >= 0) {
-            ::close(fd);
-            fd = -1;
-            open = false;
-            closed = true;
-        }
-    }
+    void close() override;
 
     int getNativeHandle() override { return fd; }
 };

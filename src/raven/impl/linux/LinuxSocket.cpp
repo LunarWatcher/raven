@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <memory>
+#include <openssl/ssl.h>
 #include <stdexcept>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -97,10 +98,29 @@ std::unique_ptr<Connection> LinuxSocket::accept() {
     if (clientFd < 0) {
         return nullptr;
     }
+    SSL* ssl = nullptr;
+
+    if (this->conf.sslConfig.has_value()) {
+        ssl = SSL_new(this->conf.sslConfig->getHandle());
+        SSL_set_fd(ssl, clientFd);
+        if (SSL_accept(ssl) <= 0) {
+            // TODO: this should probably be replaced with a unique_ptr so this can be embedded with the pointer
+            SSL_shutdown(ssl);
+            SSL_free(ssl);
+
+            ::close(clientFd);
+
+            // TODO: This is useful info under normal circumstances too, isn't it? Might be worth porting the log setup
+            // from magpie to at least offer it
+            RavenLog("Handshake failed\n");
+            return nullptr;
+        }
+    }
 
     return std::make_unique<LinuxConnection>(
         clientAddr,
-        clientFd
+        clientFd,
+        ssl
     );
 }
 

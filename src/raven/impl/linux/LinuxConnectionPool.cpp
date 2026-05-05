@@ -1,4 +1,5 @@
 #include "LinuxConnectionPool.hpp"
+#include "raven/config/SSLConfig.hpp"
 #include <iostream>
 #include <sys/eventfd.h>
 #include <cstring>

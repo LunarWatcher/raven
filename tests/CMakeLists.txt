@@ -1,5 +1,6 @@
 add_executable(tests
     src/http/HttpTests.cpp
+    src/http/HttpsTests.cpp
 )
 
 find_package(cpr REQUIRED)
