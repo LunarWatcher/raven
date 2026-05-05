@@ -23,7 +23,7 @@ protected:
 
     void initSSL();
 
-    std::unordered_map<decltype(std::this_thread::get_id()), SSL_CTX*> contextPool;
+    SSL_CTX* sslCtx;
 
 public:
     /**

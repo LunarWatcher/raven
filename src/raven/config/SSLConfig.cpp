@@ -37,13 +37,14 @@ SSLConfig::SSLConfig(
 SSLConfig::SSLConfig(SSLConfig&& other) noexcept :
     certPath(std::move(other.certPath)),
     privateKeyPath(std::move(other.privateKeyPath)),
-    contextPool(std::move(other.contextPool))
+    sslCtx(other.sslCtx)
 {
+    other.sslCtx = nullptr;
 }
 
 
 SSLConfig::~SSLConfig() {
-    for (auto& [_, sslCtx] : contextPool) {
+    if (sslCtx != nullptr) {
         SSL_CTX_free(sslCtx);
     }
 }
@@ -97,7 +98,7 @@ void SSLConfig::insecureGenerateTestCertificates() {
             // nullptr // Null with ED25519
             EVP_sha512()
         )) {
-            
+
         throw std::runtime_error(std::string {
                 ERR_error_string(
                     ERR_get_error(), nullptr
@@ -143,7 +144,7 @@ void SSLConfig::initSSL() {
             "Private key and/or certPath does not point to a file that exists"
         );
     }
-    auto sslCtx = SSL_CTX_new(
+    sslCtx = SSL_CTX_new(
         SSLv23_server_method()
     );
 
@@ -162,21 +163,10 @@ void SSLConfig::initSSL() {
         );
     }
 
-    contextPool[std::this_thread::get_id()] = sslCtx;
 }
 
 SSL_CTX* SSLConfig::getHandle() {
-    // TODO: not sure if doing it this way makes sense. Could probably speed it up slightly by using a static
-    // std::atomic<int> that provides a thread_local idx, and using that for lookup instead (O(slightly faster 1))
-    // That said, OSSL's benchmarks say using an SSL_CTX pool is like 0.3ms faster or so (on the benchmark's hardware):
-    // https://openssl-library.org/performance
-    auto it = contextPool.find(std::this_thread::get_id());
-    if (it == nullptr) {
-        initSSL();
-        return getHandle();
-    }
-
-    return it->second;
+    return sslCtx;
 }
 
 }
