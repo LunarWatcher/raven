@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raven/Logging.hpp"
+#include "raven/conn/CommonDefs.hpp"
 #include "raven/conn/Connection.hpp"
 #include "raven/ip/IP.hpp"
 #include <netinet/in.h>
@@ -14,11 +15,11 @@ private:
     int fd;
 
     size_t read(
-        std::array<char, Connection::WindowSize>& buff,
+        Buffer& buff,
         int& flags
     ) override;
     size_t write(
-        std::array<char, WindowSize>& buff,
+        Buffer& buff,
         size_t length,
         int& flags
     ) override;

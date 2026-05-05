@@ -2,6 +2,7 @@
 
 #include "raven/PoolSync.hpp"
 #include "raven/Socket.hpp"
+#include "raven/conn/CommonDefs.hpp"
 #include "raven/conn/Connection.hpp"
 #include <functional>
 #include <list>
@@ -19,7 +20,7 @@ struct ConnPoolConfig {
     std::function<
         void(
             Connection*,
-            const std::array<char, 16'384>& buff,
+            const Buffer& buff,
             size_t availableChars
         )
     > onRecv;
@@ -41,6 +42,8 @@ protected:
     std::shared_ptr<Socket> socket;
     std::list<std::shared_ptr<Connection>> conns;
     std::vector<std::thread> threads;
+
+    inline static thread_local Buffer buffer;
 
     /**
      * Contains the business end of the connection pool. This is called by each individual thread. The implementation
@@ -64,7 +67,7 @@ protected:
      */
     virtual size_t proxyRead(
         Connection* conn,
-        std::array<char, Connection::WindowSize>& buff,
+        Buffer& buff,
         int& flags
     ) {
         return conn->read(buff, flags);
@@ -77,7 +80,7 @@ protected:
     virtual size_t proxyWrite(
         Connection* conn
     ) {
-        return conn->writeBuffers();
+        return conn->writeBuffers(buffer);
     }
 public:
     ConnectionPool(

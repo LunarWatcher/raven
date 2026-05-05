@@ -1,8 +1,9 @@
 #include "Connection.hpp"
+#include "raven/conn/CommonDefs.hpp"
 
 namespace raven {
 
-size_t Connection::writeBuffers() {
+size_t Connection::writeBuffers(Buffer& buff) {
     if (writeQueue.empty()) {
         return 0;
     }
@@ -10,8 +11,6 @@ size_t Connection::writeBuffers() {
     auto& front = writeQueue.front();
     int flags = 0;
     size_t totalWritten = 0;
-    // TODO: we should be centralising these to one buffer per thread. This would result in many fewer allocations
-    std::array<char, 16'384> buff;
 
     do {
         size_t available = front.func(buff, front.lastIndex);
@@ -32,6 +31,14 @@ size_t Connection::writeBuffers() {
         }
     } while (true);
     return totalWritten;
+}
+
+void Connection::queueWrite(const WriteCallback& callback) {
+    // TODO: this is not thread-safe, but I don't think it matters. Since the connections are not to be persisted,
+    // concurrent writes should never happen
+    this->writeQueue.push(WriteBuffer {
+        callback, 0
+    });
 }
 
 }

@@ -148,13 +148,12 @@ void LinuxConnectionPool::poll() {
                     conn->close();
                 } else {
                     if (ev.events & EPOLLIN) {
-                        std::array<char, Connection::WindowSize> buff;
                         try {
                             int flags = 0;
                             while (flags == 0) {
                                 size_t bytesRead = proxyRead(
                                     conn,
-                                    buff,
+                                    buffer,
                                     flags
                                 );
                                 if (flags == Connection::ReadFlags::Closed) {
@@ -165,7 +164,7 @@ void LinuxConnectionPool::poll() {
                                 } else if (flags == 0 && bytesRead > 0) {
                                     this->callbacks.onRecv(
                                         conn,
-                                        buff,
+                                        buffer,
                                         bytesRead
                                     );
                                 }

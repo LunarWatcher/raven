@@ -36,7 +36,7 @@ LinuxConnection::~LinuxConnection() {
 }
 
 size_t LinuxConnection::read(
-    std::array<char, Connection::WindowSize>& buff,
+    Buffer& buff,
     int& flags
 ) {
     // TODO: I want to mix in poll() here, but I suspect that'll be one level up from the connection
@@ -74,7 +74,7 @@ size_t LinuxConnection::read(
 }
 
 size_t LinuxConnection::write(
-    std::array<char, 16'384>& buff,
+    Buffer& buff,
     size_t available,
     int& flags
 ) {

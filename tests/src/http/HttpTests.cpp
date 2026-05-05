@@ -15,7 +15,7 @@ TEST_CASE("HTTP server") {
         raven::ConnPoolConfig {
             .onRecv = [&](auto* conn, auto&, size_t) {
                 conn->queueWrite(
-                    [&](std::array<char, 16'384>& buff, size_t lastIdx) -> size_t {
+                    [&](raven::Buffer& buff, size_t lastIdx) -> size_t {
                         if (lastIdx >= response.size()) {
                             return 0;
                         }
@@ -56,7 +56,7 @@ TEST_CASE("Naive benchmark", "[benchmark]") {
         raven::ConnPoolConfig {
             .onRecv = [&](auto* conn, auto&, size_t) {
                 conn->queueWrite(
-                    [&](std::array<char, 16'384>& buff, size_t lastIdx) -> size_t {
+                    [&](raven::Buffer& buff, size_t lastIdx) -> size_t {
                         if (lastIdx >= response.size()) {
                             return 0;
                         }

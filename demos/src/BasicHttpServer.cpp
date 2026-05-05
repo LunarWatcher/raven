@@ -18,7 +18,7 @@ int main() {
             .onRecv = [&](auto* conn, auto& buff, size_t length) {
                 std::cout << "Received:\n" << std::string(buff.data(), length) << std::endl;
                 conn->queueWrite(
-                    [&](std::array<char, 16'384>& buff, size_t lastIdx) -> size_t {
+                    [&](raven::Buffer& buff, size_t lastIdx) -> size_t {
                         if (lastIdx >= response.size()) {
                             return 0;
                         }

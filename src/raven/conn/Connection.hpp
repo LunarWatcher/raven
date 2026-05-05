@@ -1,24 +1,14 @@
 #pragma once
 
 #include "raven/ip/IP.hpp"
-#include <functional>
 #include <queue>
 #include <string>
-#include <array>
+
+#include "CommonDefs.hpp"
 
 namespace raven {
-using WriteCallback = std::function<size_t(
-    std::array<char, 16'384>& out, size_t nextStartPosition
-)>;
-
-struct WriteBuffer {
-    WriteCallback func;
-    size_t lastIndex = 0;
-};
 
 class Connection {
-public:
-    static constexpr size_t WindowSize = 16'384;
 protected:
     // we differentiate between closed and not opened yet.
     // isOpen == false && isCLosed == false => not initialised
@@ -43,7 +33,7 @@ protected:
      *                      error.
      */
     virtual size_t read(
-        std::array<char, WindowSize>& buff,
+        Buffer& buff,
         int& flags
     ) = 0;
 
@@ -59,7 +49,7 @@ protected:
      *                      convey an error
      */
     virtual size_t write(
-        std::array<char, WindowSize>& buff,
+        Buffer& buff,
         size_t length,
         int& flags
     ) = 0;
@@ -68,7 +58,7 @@ protected:
      * Writes blocks until the OS buffers are full, and returns the total size written. Returns 0 if nothing can be
      * written.
      */
-    virtual size_t writeBuffers();
+    virtual size_t writeBuffers(Buffer& buff);
 public:
     /**
      * Contains flags specific to reads.
@@ -105,18 +95,13 @@ public:
     /**
      * Queues a write. The write is performed asynchronously, so this function returns instantly.
      */
-    virtual void queueWrite(const WriteCallback& callback) {
-        // TODO: this is not thread-safe, but I don't think it matters. Since the connections are not to be persisted,
-        // concurrent writes should never happen
-        this->writeQueue.push(WriteBuffer {
-            callback, 0
-        });
-    }
+    virtual void queueWrite(const WriteCallback& callback);
 
     const std::string& getIP() { return ip.dotNotation; }
     bool hasWriteableBuffers() { return !writeQueue.empty(); }
 
     friend class ConnectionPool;
 };
+
 
 }
