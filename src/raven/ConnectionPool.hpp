@@ -31,7 +31,7 @@ struct ConnPoolConfig {
      * Signals that a write has completed.
      * This is an optional callback. If unset, the connection will be closed once the write queue is empty.
      */
-    std::function<void(Connection*)> onWriteComplete;
+    std::function<void(Connection*)> onWriteComplete = nullptr;
 };
 
 /**
