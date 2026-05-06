@@ -181,16 +181,20 @@ void LinuxConnectionPool::poll() {
 
                     if (
                         !conn->isClosed()
-                        && conn->hasWriteableBuffers()
                         && ev.events & EPOLLOUT
                     ) {
-                        proxyWrite(conn);
+                        if (this->callbacks.onWriteReady) {
+                            this->callbacks.onWriteReady(buffer);
+                        }
+                        if (conn->hasWriteableBuffers()) {
+                            proxyWrite(conn);
 
-                        if (!conn->hasWriteableBuffers()) {
-                            if (callbacks.onWriteComplete) {
-                                callbacks.onWriteComplete(conn);
-                            } else {
-                                conn->close();
+                            if (!conn->hasWriteableBuffers()) {
+                                if (callbacks.onWriteComplete) {
+                                    callbacks.onWriteComplete(conn);
+                                } else {
+                                    conn->close();
+                                }
                             }
                         }
                     }

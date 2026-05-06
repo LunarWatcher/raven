@@ -28,6 +28,19 @@ struct ConnPoolConfig {
     > onRecv;
 
     /**
+     * \brief Callback that signals that a write can be performed. This is invoked when the queue is empty
+     *
+     * The callback is optional.
+     *
+     * \param buff      A buffer that optionally can be used for writes within the callback.
+     */
+    std::function<
+        void(
+            Buffer& buff
+        )
+    > onWriteReady = nullptr;
+
+    /**
      * Signals that a write has completed.
      * This is an optional callback. If unset, the connection will be closed once the write queue is empty.
      */
