@@ -40,7 +40,12 @@ public:
     ~LinuxConnection();
 
     size_t write(
-        Buffer& buff,
+        const Buffer& buff,
+        size_t length,
+        int& flags
+    ) override;
+    size_t write(
+        const char* buff,
         size_t length,
         int& flags
     ) override;

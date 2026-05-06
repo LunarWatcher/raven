@@ -97,11 +97,16 @@ public:
      *                      convey an error
      */
     virtual size_t write(
-        Buffer& buff,
+        const Buffer& buff,
         size_t length,
         int& flags
     ) = 0;
 
+    virtual size_t write(
+        const char* buff,
+        size_t length,
+        int& flags
+    ) = 0;
 
     const std::string& getIP() { return ip.dotNotation; }
     bool hasWriteableBuffers() { return !writeQueue.empty(); }

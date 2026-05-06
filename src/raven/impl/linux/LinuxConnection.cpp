@@ -90,7 +90,19 @@ size_t LinuxConnection::read(
 }
 
 size_t LinuxConnection::write(
-    Buffer& buff,
+    const Buffer& buff,
+    size_t available,
+    int& flags
+) {
+    return write(
+        buff.data(),
+        available,
+        flags
+    );
+}
+
+size_t LinuxConnection::write(
+    const char* buff,
     size_t available,
     int& flags
 ) {
