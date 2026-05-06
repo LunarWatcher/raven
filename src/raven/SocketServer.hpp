@@ -2,7 +2,6 @@
 
 #include "raven/ConnectionPool.hpp"
 #include "raven/Socket.hpp"
-#include "raven/config/SSLConfig.hpp"
 #include <memory>
 
 namespace raven {
@@ -13,8 +12,6 @@ struct ServerConfig {
     size_t threads = std::max<size_t>(
         1, std::thread::hardware_concurrency() / 2
     );
-
-    std::optional<SSLConfig> sslConfig;
 };
 
 class SocketServer {
