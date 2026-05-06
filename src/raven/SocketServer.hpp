@@ -45,6 +45,13 @@ public:
      */
     void close();
 
+    uint16_t getPort() {
+        return this->sock->getPort();
+    }
+    const std::string& getAssignedAddr() {
+        return this->sock->getAddr();
+    }
+
 };
 
 }

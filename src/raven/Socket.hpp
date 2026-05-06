@@ -34,6 +34,9 @@ public:
 
     virtual std::unique_ptr<Connection> accept() = 0;
     virtual int getNativeHandle() = 0;
+
+    virtual uint16_t getPort() = 0;
+    virtual const std::string& getAddr() = 0;
 };
 
 }

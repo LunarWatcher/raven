@@ -83,6 +83,16 @@ void LinuxSocket::bind() {
             "Failed to listen to socket. errno=" + std::to_string(errno)
         );
     }
+
+    struct sockaddr_in sin;
+    socklen_t len = sizeof(sin);
+    if (getsockname(this->fd, (struct sockaddr *) &sin, &len) != -1) {
+        this->port = ntohs(sin.sin_port);
+        this->assignedAddr = {
+            ip::IPVersion::IPv4,
+            std::string(inet_ntoa((const in_addr&) sin.sin_addr))
+        };
+    }
 }
 
 std::unique_ptr<Connection> LinuxSocket::accept() {
