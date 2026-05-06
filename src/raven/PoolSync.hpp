@@ -85,10 +85,10 @@ struct PoolSync {
     }
 
     void waitForReady() {
+        std::unique_lock l(readyLock);
         if (isReady) {
             return;
         }
-        std::unique_lock l(readyLock);
         ready.wait(l);
     }
 };
