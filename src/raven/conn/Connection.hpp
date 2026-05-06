@@ -1,12 +1,15 @@
 #pragma once
 
 #include "raven/ip/IP.hpp"
+#include <memory>
 #include <queue>
 #include <string>
 
 #include "CommonDefs.hpp"
 
 namespace raven {
+
+struct ConnUserData;
 
 class Connection {
 protected:
@@ -60,6 +63,8 @@ protected:
      */
     virtual size_t writeBuffers(Buffer& buff);
 public:
+    std::shared_ptr<ConnUserData> userData = nullptr;
+
     /**
      * Contains flags specific to reads.
      */
