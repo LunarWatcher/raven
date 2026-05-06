@@ -20,11 +20,6 @@ private:
         Buffer& buff,
         int& flags
     ) override;
-    size_t write(
-        Buffer& buff,
-        size_t length,
-        int& flags
-    ) override;
 
 public:
     LinuxConnection(
@@ -43,6 +38,12 @@ public:
     }
 
     ~LinuxConnection();
+
+    size_t write(
+        Buffer& buff,
+        size_t length,
+        int& flags
+    ) override;
 
     void close() override;
 

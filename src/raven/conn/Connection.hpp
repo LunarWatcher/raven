@@ -41,23 +41,6 @@ protected:
     ) = 0;
 
     /**
-     * Attempts to write to the socket. This interacts directly with the socket, and must not be used by implementing
-     * applications. Use the other form of write instead.
-     *
-     * \param buff          The buffer to write from
-     * \param length        The number of characters available in the buffer
-     * \param flags[out]    Additional information about the write. If nothing noteworthy, this is set to 0.
-     *                      This is usually used to signal errors. For valid values, see WriteFlags
-     * \returns             The size of the bytes written. 0 means no bytes written, but this does not necessarily
-     *                      convey an error
-     */
-    virtual size_t write(
-        Buffer& buff,
-        size_t length,
-        int& flags
-    ) = 0;
-
-    /**
      * Writes blocks until the OS buffers are full, and returns the total size written. Returns 0 if nothing can be
      * written.
      */
@@ -101,6 +84,24 @@ public:
      * Queues a write. The write is performed asynchronously, so this function returns instantly.
      */
     virtual void queueWrite(const WriteCallback& callback);
+
+    /**
+     * Attempts to write to the socket. This interacts directly with the socket, and should not be used by implementing
+     * applications.
+     *
+     * \param buff          The buffer to write from
+     * \param length        The number of characters available in the buffer
+     * \param flags[out]    Additional information about the write. If nothing noteworthy, this is set to 0.
+     *                      This is usually used to signal errors. For valid values, see WriteFlags
+     * \returns             The size of the bytes written. 0 means no bytes written, but this does not necessarily
+     *                      convey an error
+     */
+    virtual size_t write(
+        Buffer& buff,
+        size_t length,
+        int& flags
+    ) = 0;
+
 
     const std::string& getIP() { return ip.dotNotation; }
     bool hasWriteableBuffers() { return !writeQueue.empty(); }
