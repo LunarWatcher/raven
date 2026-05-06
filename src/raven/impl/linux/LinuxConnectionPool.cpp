@@ -184,7 +184,7 @@ void LinuxConnectionPool::poll() {
                         && ev.events & EPOLLOUT
                     ) {
                         if (this->callbacks.onWriteReady) {
-                            this->callbacks.onWriteReady(buffer);
+                            this->callbacks.onWriteReady(conn, buffer);
                         }
                         if (conn->hasWriteableBuffers()) {
                             proxyWrite(conn);

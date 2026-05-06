@@ -36,6 +36,7 @@ struct ConnPoolConfig {
      */
     std::function<
         void(
+            Connection*,
             Buffer& buff
         )
     > onWriteReady = nullptr;
