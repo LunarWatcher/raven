@@ -9,7 +9,7 @@
 
 namespace raven {
 
-struct ConnUserData;
+struct ConnUserData {};
 
 class Connection {
 protected:
