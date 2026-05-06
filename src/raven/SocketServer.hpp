@@ -45,6 +45,10 @@ public:
      */
     void close();
 
+    void waitForStarted() {
+        sync.waitForReady();
+    }
+
     uint16_t getPort() {
         return this->sock->getPort();
     }

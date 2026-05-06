@@ -15,8 +15,13 @@ struct PoolSync {
     std::condition_variable sync;
     std::condition_variable closed;
 
+    std::mutex readyLock;
+    std::condition_variable ready;
+
     std::atomic<size_t> pools;
     std::atomic<bool> isRunning{true};
+
+    std::atomic<bool> isReady{false};
 
     PoolSync() : pools {0} {}
 
@@ -56,6 +61,8 @@ struct PoolSync {
     }
 
     void newConnPool() {
+        // Note to self: inlining ++this->pools in RavenLog results in ++pools never being evaluated if
+        // RAVEN_DEBUG_LOGGING = false
         [[maybe_unused]]
         auto pools = ++this->pools;
         RavenLog("Registered %li pools\n", pools);
@@ -69,6 +76,20 @@ struct PoolSync {
         auto pools = --this->pools;
         RavenLog("Deregistered: %li pools remain\n", pools);
         sync.notify_all();
+    }
+
+    void signalReady() {
+        std::unique_lock l(readyLock);
+        isReady = true;
+        ready.notify_all();
+    }
+
+    void waitForReady() {
+        if (isReady) {
+            return;
+        }
+        std::unique_lock l(readyLock);
+        ready.wait(l);
     }
 };
 

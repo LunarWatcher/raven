@@ -22,6 +22,12 @@ ConnectionPool::~ConnectionPool() {
 }
 
 void ConnectionPool::start(size_t threadCount) {
+    if (sync.isReady) {
+        [[unlikely]]
+        throw std::runtime_error(
+            "You cannot call start multiple times"
+        );
+    }
     if (threadCount == 0) {
         [[unlikely]]
         throw std::runtime_error(
@@ -53,6 +59,8 @@ void ConnectionPool::start(size_t threadCount) {
             )
         );
     }
+
+    sync.signalReady();
 }
 
 }
