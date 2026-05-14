@@ -6,7 +6,6 @@
 # - clang-diagnostic-unused-private-field: Maybe useful eventually, but not right now.
 # - portability-template-virtual-member-function: not important
 Checks: >
-  -*,
   bugprone-*,
   clang-*,
   misc-*,
@@ -15,6 +14,7 @@ Checks: >
   modernize-deprecated-headers,
   modernize-use-constexpr,
   modernize-use-string-view,
+  optin.taint.*,
   -bugprone-easily-swappable-parameters,
   -bugprone-exception-escape,
   -bugprone-macro-parentheses,
