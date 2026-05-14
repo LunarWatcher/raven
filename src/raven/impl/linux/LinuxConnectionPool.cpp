@@ -20,6 +20,10 @@ LinuxConnectionPool::LinuxConnectionPool(
     }
 }
 
+LinuxConnectionPool::~LinuxConnectionPool() {
+    close();
+}
+
 void LinuxConnectionPool::propagateShutdown() {
     uint64_t val = 1; // Note to self; this needs to be the same size as the eventfd
     eventfd_write(eventFd, val);
@@ -61,10 +65,6 @@ void LinuxConnectionPool::start(size_t threadCount) {
     }
 
     ConnectionPool::start(threadCount);
-}
-
-LinuxConnectionPool::~LinuxConnectionPool() {
-    close();
 }
 
 void LinuxConnectionPool::close() {
@@ -144,11 +144,11 @@ void LinuxConnectionPool::poll() {
             } else {
                 auto* conn = (Connection*) ev.data.ptr;
 
-                if (ev.events & EPOLLHUP || ev.events & EPOLLERR) {
+                if ((ev.events & EPOLLHUP) != 0 || (ev.events & EPOLLERR) != 0) {
                     RavenLog("EPOLLHUP signaled\n");
                     conn->close();
                 } else {
-                    if (ev.events & EPOLLIN) {
+                    if ((ev.events & EPOLLIN) != 0) {
                         try {
                             int flags = 0;
                             while (flags == 0) {
@@ -181,7 +181,7 @@ void LinuxConnectionPool::poll() {
 
                     if (
                         !conn->isClosed()
-                        && ev.events & EPOLLOUT
+                        && (ev.events & EPOLLOUT) != 0
                     ) {
                         if (this->callbacks.onWriteReady) {
                             this->callbacks.onWriteReady(conn, buffer);

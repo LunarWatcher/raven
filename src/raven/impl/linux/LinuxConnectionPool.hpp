@@ -4,7 +4,7 @@
 
 namespace raven::linuximpl {
 
-class LinuxConnectionPool : public ConnectionPool {
+class LinuxConnectionPool final : public ConnectionPool {
 protected:
     int epollFd = -1;
     int eventFd = -1;

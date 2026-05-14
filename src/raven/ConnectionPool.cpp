@@ -39,6 +39,7 @@ void ConnectionPool::start(size_t threadCount) {
         threads.push_back(
             std::thread(
                 [this, i]() {
+                    std::ignore = i; // shut clang-tidy up
                     // TODO: this should be RAII'd
                     RavenLog("Thread %ld online\n", i);
                     this->sync.newConnPool();

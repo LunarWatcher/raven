@@ -11,11 +11,12 @@
 
 namespace raven::linuximpl {
 
-class LinuxConnection : public Connection {
+class LinuxConnection final : public Connection {
 private:
     int fd;
     SSL* ssl;
 
+protected:
     size_t read(
         Buffer& buff,
         int& flags

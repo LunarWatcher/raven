@@ -14,7 +14,7 @@ SocketServer::SocketServer(
     sock(std::make_shared<impl::Socket>(
             std::move(socketConf)
         )),
-    conf(std::move(serverConf)),
+    conf(std::move(serverConf)), // NOLINT(performance-move-const-arg): will probably become nontrivial at some point:tm:
     pool(
         std::make_unique<impl::ConnectionPool>(
             poolConf,

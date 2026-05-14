@@ -6,7 +6,7 @@
 #include <cstdint>
 
 namespace raven::linuximpl {
-class LinuxSocket : public Socket {
+class LinuxSocket final : public Socket {
 private:
     int fd;
 

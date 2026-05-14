@@ -30,6 +30,7 @@ Checks: >
   -performance-avoid-endl,
   -performance-enum-size,
   -readability-*,
+  -portability-avoid-pragma-once,
   -portability-template-virtual-member-function
 
 HeaderFilterRegex: ".*\\/src\\/raven\\/.*"

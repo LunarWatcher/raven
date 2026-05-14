@@ -60,7 +60,8 @@ void LinuxSocket::bind() {
     sockaddr_in addr = {
         .sin_family = AF_INET,
         .sin_port = htons(conf.port),
-        .sin_addr = resolved
+        .sin_addr = resolved,
+        .sin_zero = {}
     };
     // TODO: Should this be togglable?
     const int enable = 1;
