@@ -22,6 +22,18 @@ if(RAVEN_DEBUG_LOGGING)
 endif()
 
 find_package(OpenSSL REQUIRED)
-target_link_libraries(raven PUBLIC openssl::openssl)
+if (OPENSSL_LIBRARIES)
+    set(RAVEN_EXTRA_LIBRARIES
+        ${RAVEN_EXTRA_LIBRARIES}
+        ${OPENSSL_LIBRARIES}
+    )
+else()
+    # Fuck you conan
+    set(RAVEN_EXTRA_LIBRARIES
+        ${RAVEN_EXTRA_LIBRARIES}
+        ${OpenSSL_LIBRARIES}
+    )
+endif()
+target_link_libraries(raven PUBLIC ${RAVEN_EXTRA_LIBRARIES})
 target_include_directories(raven PUBLIC ./)
 # vim:ft=cmake
