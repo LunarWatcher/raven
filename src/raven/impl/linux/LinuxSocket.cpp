@@ -38,7 +38,7 @@ void LinuxSocket::bind() {
     );
     fcntl(
         fd,
-        F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK
+        F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK // NOLINT(bugprone-signed-bitwise)
     );
 
     if (fd < 0) {
