@@ -9,6 +9,9 @@ class Raven(ConanFile):
     generators = "CMakeToolchain", "CMakeDeps"
 
     def requirements(self):
-        self.test_requires(
-            "cpr/1.14.1"
+        self.requires(
+            "openssl/4.1.0"
         )
+        # self.test_requires(
+        #     "cpr/1.14.1"
+        # )

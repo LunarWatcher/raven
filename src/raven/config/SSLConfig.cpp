@@ -50,6 +50,7 @@ SSLConfig::~SSLConfig() {
 }
 
 void SSLConfig::insecureGenerateTestCertificates() {
+
     if (std::filesystem::exists(privateKeyPath) && std::filesystem::exists(certPath)) {
         return;
     }
@@ -65,13 +66,16 @@ void SSLConfig::insecureGenerateTestCertificates() {
     X509_gmtime_adj(X509_get_notAfter(x509), 60ll * 60 * 24 * 365 * 10); // 10 years from now
 
     X509_set_pubkey(x509, privateKey);
-    auto name = X509_get_subject_name(x509);
+    // Bullshit required for openssl 4, where the name field is no longer const
+    auto name = X509_NAME_new();
+
     X509_NAME_add_entry_by_txt(
         name,
         "C",
         MBSTRING_ASC,
         (unsigned char*) "NO", -1, -1, 0
     );
+    // Note about all subsequent copies: because the name is no longer const, I do not trust it doesn't change. 
     X509_NAME_add_entry_by_txt(
         name,
         "O",
@@ -88,8 +92,11 @@ void SSLConfig::insecureGenerateTestCertificates() {
         (unsigned char*) "localhost", -1, -1, 0
     );
 
+
+    X509_NAME_free(name);
+    auto issuerName = X509_get_subject_name(x509);
     X509_set_issuer_name(
-        x509, name
+        x509, issuerName
     );
 
     if (!X509_sign(
